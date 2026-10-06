@@ -7,7 +7,7 @@
 
 #ifdef USE_ESP32
 #include <WiFi.h>
-#ifndef USE_ESP32_VARIANT_ESP32S3
+#if !defined(USE_ESP32_VARIANT_ESP32S3) && !defined(USE_ESP32_VARIANT_ESP32C3)
 #include <esp32/himem.h>
 #endif
 #include "esp_chip_info.h"
