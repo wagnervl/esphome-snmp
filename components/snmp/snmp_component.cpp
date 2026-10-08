@@ -15,19 +15,29 @@ namespace snmp {
 
 static const char *const TAG = "snmp";
 
-sensor::Sensor *SNMPComponent::data1_sensor_callback_ = nullptr;
+static sensor::Sensor *data_sensors_callback_[9] = {nullptr};
 
-int SNMPComponent::get_data1_value() {
-  if (data1_sensor_callback_ == nullptr) {
+static int get_data_value(int index) {
+  if (index < 0 || index >= 9 || data_sensors_callback_[index] == nullptr) {
     return 0;
   }
 
-  if (std::isnan(data1_sensor_callback_->state)) {
+  if (std::isnan(data_sensors_callback_[index]->state)) {
     return 0;
   }
 
-  return static_cast<int>(std::lround(data1_sensor_callback_->state * 10.0f));
+  return static_cast<int>(std::lround(data_sensors_callback_[index]->state * 10.0f));
 }
+
+static int get_data1_value() { return get_data_value(0); }
+static int get_data2_value() { return get_data_value(1); }
+static int get_data3_value() { return get_data_value(2); }
+static int get_data4_value() { return get_data_value(3); }
+static int get_data5_value() { return get_data_value(4); }
+static int get_data6_value() { return get_data_value(5); }
+static int get_data7_value() { return get_data_value(6); }
+static int get_data8_value() { return get_data_value(7); }
+static int get_data9_value() { return get_data_value(8); }
 
 /// @brief Returns network uptime
 /// @return time in hundreds of seconds
@@ -294,11 +304,27 @@ void SNMPComponent::setup() {
   setup_chip_mib_();
   setup_wifi_mib_();
 
-  if (data1_sensor_ != nullptr) {
-    data1_sensor_callback_ = data1_sensor_;
-    snmp_agent_.addDynamicIntegerHandler(
-        CUSTOM_OID "32.10.1.0",
-        SNMPComponent::get_data1_value);
+  static int (*data_callbacks[9])() = {
+      get_data1_value,
+      get_data2_value,
+      get_data3_value,
+      get_data4_value,
+      get_data5_value,
+      get_data6_value,
+      get_data7_value,
+      get_data8_value,
+      get_data9_value,
+  };
+
+  for (int i = 0; i < 9; i++) {
+    if (data_sensors_[i] != nullptr) {
+      data_sensors_callback_[i] = data_sensors_[i];
+
+      char oid[32];
+      snprintf(oid, sizeof(oid), CUSTOM_OID "32.10.%d.0", i + 1);
+
+      snmp_agent_.addDynamicIntegerHandler(oid, data_callbacks[i]);
+    }
   }
 
   snmp_agent_.sortHandlers();  // for walk to work properly

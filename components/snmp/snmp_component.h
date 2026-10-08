@@ -36,8 +36,11 @@ class SNMPComponent : public Component {
 
   void set_location(const std::string &location) { location_ = location; }
 
-  void set_data1_sensor(sensor::Sensor *sensor) { data1_sensor_ = sensor; }
-  static int get_data1_value();
+  void set_data_sensor(int index, sensor::Sensor *sensor) {
+    if (index >= 0 && index < 9) {
+      data_sensors_[index] = sensor;
+    }
+  }
 
  protected:
   WiFiUDP udp_;
@@ -73,8 +76,7 @@ class SNMPComponent : public Component {
   /// location string
   std::string location_;
 
-  sensor::Sensor *data1_sensor_{nullptr};
-  static sensor::Sensor *data1_sensor_callback_;
+  sensor::Sensor *data_sensors_[9]{};
 };
 
 }  // namespace snmp
