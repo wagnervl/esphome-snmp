@@ -4,6 +4,7 @@
 #include "esphome/core/version.h"
 #include "esphome/components/wifi/wifi_component.h"
 #include "esphome/components/network/ip_address.h"
+#include <cmath>
 
 // Integration test available: https://github.com/aquaticus/esphome_snmp_tests
 
@@ -13,6 +14,20 @@ namespace snmp {
 #define CUSTOM_OID ".1.3.9999."
 
 static const char *const TAG = "snmp";
+
+sensor::Sensor *SNMPComponent::data1_sensor_callback_ = nullptr;
+
+int SNMPComponent::get_data1_value() {
+  if (data1_sensor_callback_ == nullptr) {
+    return 0;
+  }
+
+  if (std::isnan(data1_sensor_callback_->state)) {
+    return 0;
+  }
+
+  return static_cast<int>(std::lround(data1_sensor_callback_->state * 10.0f));
+}
 
 /// @brief Returns network uptime
 /// @return time in hundreds of seconds
@@ -278,6 +293,13 @@ void SNMPComponent::setup() {
 #endif
   setup_chip_mib_();
   setup_wifi_mib_();
+
+  if (data1_sensor_ != nullptr) {
+    data1_sensor_callback_ = data1_sensor_;
+    snmp_agent_.addDynamicIntegerHandler(
+        CUSTOM_OID "32.10.1.0",
+        SNMPComponent::get_data1_value);
+  }
 
   snmp_agent_.sortHandlers();  // for walk to work properly
 

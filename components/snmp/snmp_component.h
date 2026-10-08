@@ -4,6 +4,7 @@
 #include "esphome/core/component.h"
 #include "esphome/core/hal.h"
 #include "SNMP_Agent.h"
+#include "esphome/components/sensor/sensor.h"
 
 #ifdef USE_ESP32
 #include <WiFi.h>
@@ -34,6 +35,9 @@ class SNMPComponent : public Component {
   void set_contact(const std::string &contact) { contact_ = contact; }
 
   void set_location(const std::string &location) { location_ = location; }
+
+  void set_data1_sensor(sensor::Sensor *sensor) { data1_sensor_ = sensor; }
+  static int get_data1_value();
 
  protected:
   WiFiUDP udp_;
@@ -68,6 +72,9 @@ class SNMPComponent : public Component {
 
   /// location string
   std::string location_;
+
+  sensor::Sensor *data1_sensor_{nullptr};
+  static sensor::Sensor *data1_sensor_callback_;
 };
 
 }  // namespace snmp

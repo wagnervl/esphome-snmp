@@ -27,12 +27,15 @@ CONFIG_SCHEMA = cv.All(
     cv.only_with_arduino,
 )
 
-
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
 
     cg.add(var.set_location(config["location"]))
     cg.add(var.set_contact(config["contact"]))
+
+    if data1_id := config.get("data1"):
+        data1_sensor = await cg.get_variable(data1_id)
+        cg.add(var.set_data1_sensor(data1_sensor))
 
     await cg.register_component(var, config)
 
